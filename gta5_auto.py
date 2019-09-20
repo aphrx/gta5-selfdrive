@@ -22,8 +22,10 @@ def region_of_interest(img):
 
 def display_lines(img, lines):
 	line_image = np.zeros_like(img)
-	m1 = 0;
-	m2 = 0;
+	m1 = 0; ## Right
+	m2 = 0; ## Left
+	length1 = 0
+	length2 = 0
 	m1coords = [[0, 0], [0,0]]
 	m2coords = [[0, 0], [0,0]]
 
@@ -38,22 +40,65 @@ def display_lines(img, lines):
 				m = y/x
 				z = (x*x)+(y*y)
 				length = math.sqrt(z)
-				if(length > 0):
-					if(math.fabs(m) > 0.2 and math.fabs(m) < 0.6):
-						#length = math.sqrt((x*x)+(y*y))
-						if(m > 0 and m1 < length):
-							m1 = length
-							m1coords[0] = [x1, y1]
-							m1coords[1] = [x2, y2]
-							cv2.line(line_image, (m1coords[0][0], m1coords[0][1]), (m1coords[1][0], m1coords[1][1]), (255, 255, 255), 5)
-							
-						elif(m < 0 and m2 < length):
-							m2 = length
-							m2coords[0] = [x1, y1]
-							m2coords[1] = [x2, y2]
-							cv2.line(line_image, (m2coords[0][0], m2coords[0][1]), (m2coords[1][0], m2coords[1][1]), (255, 255, 255), 5)
-	
-	
+				#if(length > 0):
+				print(length)
+				if(math.fabs(m) > 0.2 and math.fabs(m) < 0.8):
+					#length = math.sqrt((x*x)+(y*y))
+
+					if(m > m1):# and length1 < length):
+						m = m1
+						m1coords[0] = [x1, y1]
+						m1coords[1] = [x2, y2]
+
+						
+					elif(m < m2):# and length2 < length):
+						m = m2
+						m2coords[0] = [x1, y1]
+						m2coords[1] = [x2, y2]
+			cv2.line(line_image, (m1coords[0][0], m1coords[0][1]), (m1coords[1][0], m1coords[1][1]), (255, 255, 255), 1)
+			cv2.line(line_image, (m2coords[0][0], m2coords[0][1]), (m2coords[1][0], m2coords[1][1]), (255, 255, 255), 1)
+
+	return line_image, m1, m2
+
+def display_lines2(img, lines):
+	line_image = np.zeros_like(img)
+	m1 = 0; ## Right
+	m2 = 0; ## Left
+	length1 = 0
+	length2 = 0
+	m1coords = [[0, 0], [0,0]]
+	m2coords = [[0, 0], [0,0]]
+
+	if lines is not None:
+		for line in lines:
+			x1, y1, x2, y2 = line.reshape(4)
+			
+			#x = ((x2.item()-x1.item())(x2.item()-x1.item()) + (y2.item()-y1.item())(y2.item()-y1.item()))
+			x = (float)(x2.item() - x1.item())
+			y = (float)(y2.item() - y1.item())
+			if (x != 0 and y != 0):
+				m = y/x
+				z = (x*x)+(y*y)
+				length = math.sqrt(z)
+				#if(length > 0):
+				print(length)
+				if(math.fabs(m) > 0.2 and math.fabs(m) < 0.8):
+					#length = math.sqrt((x*x)+(y*y))
+
+					if(m > m1 and length1 < length):
+						m = m1
+						m1coords[0] = [x1, y1]
+						m1coords[1] = [x2, y2]
+
+						
+					elif(m < m2 and length2 < length):
+						m = m2
+						m2coords[0] = [x1, y1]
+						m2coords[1] = [x2, y2]
+			cv2.line(line_image, (m1coords[0][0], m1coords[0][1]), (m1coords[1][0], m1coords[1][1]), (255, 255, 255), 10)
+			cv2.line(line_image, (m2coords[0][0], m2coords[0][1]), (m2coords[1][0], m2coords[1][1]), (255, 255, 255), 10)
+
+
 	
 	## cv2.line(line_image, (0, 400), (800, 400), (255, 255, 255), 5)		
 	return line_image, m1, m2
@@ -64,9 +109,10 @@ def main():
 		img = cv2.cvtColor(np.array(printscreen_pil), cv2.COLOR_BGR2RGB)
 		processed_img = region_of_interest(process_img(img))
 		
-		lines = cv2.HoughLinesP(processed_img, 2, np.pi/180, 100, np.array([]), minLineLength=100, maxLineGap=5)
+		lines = cv2.HoughLinesP(processed_img, 2, np.pi/180, 100, np.array([]), minLineLength=300, maxLineGap=5)
 
 		lined_img, m1, m2 = display_lines(processed_img, lines)
+		lined_img, m1, m2 = display_lines2(processed_img, lines)
 
 		overlayed_img = cv2.addWeighted(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), 0.8, lined_img, 1, 1)
 
